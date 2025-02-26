@@ -1,3 +1,4 @@
+```
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -93,3 +94,5 @@ const DataTable = ({
 
 export default DataTable;
 
+
+```
