@@ -1,98 +1,336 @@
-```
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
+```import React, { useState } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Collapse,
+  IconButton,
+  styled,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExpandLess,
+  ExpandMore,
+  Dashboard,
+  People,
+  Settings,
+  Assessment,
+  Business,
+  Assignment,
+  Notifications,
+  Help,
+  Logout,
+} from '@mui/icons-material';
+
+const DrawerWidth = 240;
+const CollapseDrawerWidth = 75
+
+const StyledDrawer = styled(Drawer)(({ theme, open }) => ({
+  width: open ? DrawerWidth : CollapseDrawerWidth,
+  height: '100vh',
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  '& .MuiDrawer-paper': {
+    width: open ? DrawerWidth : CollapseDrawerWidth,
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    overflowX: 'hidden',
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    '& ::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '& ::-webkit-scrollbar-track': {
+      background: 'transparent',
+    },
+    '& ::-webkit-scrollbar-thumb': {
+      background: 'rgba(0, 0, 0, 0.2)',
+      borderRadius: '3px',
+    },
+    '& ::-webkit-scrollbar-thumb:hover': {
+      background: 'rgba(0, 0, 0, 0.3)',
+    },
+    '& a': {
+      color: 'inherit',
+      textDecoration: 'none',
+    },
+  },
+}));
 
 
-const DataTable = ({
-  columns = [],
-  rows = [],
-  rowsPerPageOptions = [10, 25, 100],
-  page = 0,
-  rowsPerPage = 10,
-  onPageChange = () => { },
-  onRowsPerPageChange = () => { },
-  onRowClick = () => { },
-  pagination = false,
-  emptyState = null,
-  loading = false,
-  tableHeaderColor = '#f5f5f5'
-}) => {
-  if (!Array.isArray(columns) || !Array.isArray(rows)) {
-    console.error("columns and rows must be Array")
-    return
-  }
+const StyledList = styled(List)(() => ({
+  padding: "0px 8px"
+}))
+
+const menuItems = [
+  {
+    text: 'Dashboard',
+    icon: <Dashboard />,
+    path: '/dashboard',
+    children: [
+      { text: 'Analytics', path: '/dashboard/analytics', icon: <Dashboard /> },
+      { text: 'Overview', path: '/dashboard/overview' },
+      { text: 'Reports', path: '/dashboard/reports' },
+    ],
+  },
+  {
+    text: 'Analytics',
+    icon: <Assessment />,
+    path: '/analytics',
+    children: [
+      { text: 'Performance', path: '/analytics/performance' },
+      { text: 'Metrics', path: '/analytics/metrics' },
+      { text: 'Growth', path: '/analytics/growth' },
+    ],
+  },
+  {
+    text: 'Organization',
+    icon: <Business />,
+    path: '/organization',
+    children: [
+      { text: 'Departments', path: '/organization/departments' },
+      { text: 'Teams', path: '/organization/teams' },
+      { text: 'Roles', path: '/organization/roles' },
+    ],
+  },
+  {
+    text: 'Users',
+    icon: <People />,
+    path: '/users',
+    children: [
+      { text: 'User List', path: '/users/list' },
+      { text: 'User Groups', path: '/users/groups' },
+      { text: 'Permissions', path: '/users/permissions' },
+    ],
+  },
+  {
+    text: 'Tasks',
+    icon: <Assignment />,
+    path: '/tasks',
+    children: [
+      { text: 'My Tasks', path: '/tasks/my-tasks' },
+      { text: 'Team Tasks', path: '/tasks/team' },
+      { text: 'Archive', path: '/tasks/archive' },
+    ],
+  },
+  {
+    text: 'Notifications',
+    icon: <Notifications />,
+    path: '/notifications',
+  },
+  {
+    text: 'Settings',
+    icon: <Settings />,
+    path: '/settings',
+    children: [
+      { text: 'General', path: '/settings/general' },
+      { text: 'Security', path: '/settings/security' },
+      { text: 'Preferences', path: '/settings/preferences' },
+    ],
+  },
+  {
+    text: 'Help',
+    icon: <Help />,
+    path: '/help',
+  },
+];
+
+export default function LeftSidebarWithDrawer() {
+  const [open, setOpen] = useState(true);
+  const [expandedItems, setExpandedItems] = useState({});
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleDrawerToggle = () => {
+    setOpen(!open);
+    if (!open) {
+      setExpandedItems({}); // Reset expanded items when opening
+    }
+  };
+
+  const handleItemClick = (item) => {
+    if (!open) {
+      // When drawer is closed, navigate to first child if available
+      if (item.children && item.children.length > 0) {
+        navigate(item.children[0].path);
+      } else {
+        navigate(item.path);
+      }
+      return;
+    }
+
+    if (item.children) {
+      setExpandedItems((prev) => ({
+        ...prev,
+        [item.text]: !prev[item.text],
+      }));
+    }
+  };
+
+  const handleLogout = () => {
+    console.log('Logging out...');
+    // Implement your logout logic here
+  };
+
+  const isChildSelected = (item) => {
+    return item.children?.some(child => location.pathname === child.path);
+  };
+
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden', border: "1px solid grey" }}>
-      <TableContainer sx={{ height: `calc(100vh - 200px)` }}>
-        <Table stickyHeader aria-label="custom table">
-          <TableHead>
-            <TableRow sx={{ backgroundColor: tableHeaderColor, }}>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth, backgroundColor: tableHeaderColor, }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} align="center">
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} align="center">
-                  {emptyState ? emptyState : <Typography variant="body1">No data available</Typography>}
+    <>
+      <IconButton
+        onClick={handleDrawerToggle}
+        sx={{
+          position: 'fixed',
+          left: open ? DrawerWidth - 28 : 37,
+          top: 5,
+          zIndex: 1201,
+          transition: theme => theme.transitions.create('left', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          backgroundColor: 'white',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+          },
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        {open ? <ChevronLeft /> : <ChevronRight />}
+      </IconButton>
 
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row, rowIndex) => (
-                <TableRow hover role="checkbox" tabIndex={-1} key={rowIndex} onClick={() => onRowClick && onRowClick(row)}>
-                  {columns.map((column) => {
-                    const value = row[column.id];
-                    return (
-                      <TableCell key={column.id} align={column.align}>
-                        {column.format && typeof value === 'number' ? column.format(value) : value}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {pagination && (
-        <TablePagination
-          rowsPerPageOptions={rowsPerPageOptions}
-          component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={onPageChange}
-          onRowsPerPageChange={onRowsPerPageChange}
-        />
-      )}
-    </Box>
+      <StyledDrawer variant={isMobile ? "temporary" : "permanent"} open={open}>
+        <StyledList sx={{
+          mt: 3,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          flexGrow: 1,
+        }}>
+          {menuItems.map((item) => (
+            <React.Fragment key={item.text}>
+              <ListItem
+                button={true}
+                component={item.children && open ? 'div' : Link}
+                to={item.children && open ? undefined : item.path}
+                onClick={() => handleItemClick(item)}
+                sx={{
+                  minHeight: 48,
+                  color: 'inherit',
+                  backgroundColor: expandedItems[item.text]
+                    ? 'rgba(0, 0, 0, 0.08)'
+                    : location.pathname === item.path || isChildSelected(item)
+                      ? 'rgba(0, 0, 0, 0.12)'
+                      : 'transparent',
+                  '&:hover': {
+                    backgroundColor: expandedItems[item.text]
+                      ? 'rgba(0, 0, 0, 0.12)'
+                      : location.pathname === item.path || isChildSelected(item)
+                        ? 'rgba(0, 0, 0, 0.16)'
+                        : 'rgba(0, 0, 0, 0.04)',
+                  },
+                  borderRadius: "8px",
+                }}
+              >
+                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={{
+                    opacity: open ? 1 : 0,
+                    whiteSpace: 'nowrap',
+                    color: 'inherit',
+                  }}
+                />
+                {open && item.children && (
+                  expandedItems[item.text] ? <ExpandLess /> : <ExpandMore />
+                )}
+              </ListItem>
+
+              {open && item.children && (
+                <Collapse in={expandedItems[item.text]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.children.map((child) => (
+                      <ListItem
+                        button
+                        component={Link}
+                        to={child.path}
+                        key={child.text}
+                        sx={{
+                          pl: 4,
+                          minHeight: 48,
+                          color: 'inherit',
+                          backgroundColor: location.pathname === child.path
+                            ? 'rgba(0, 0, 0, 0.12)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                          '&:hover': {
+                            backgroundColor: location.pathname === child.path
+                              ? 'rgba(0, 0, 0, 0.16)'
+                              : 'rgba(0, 0, 0, 0.08)',
+                            borderRadius: "8px"
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ color: 'inherit' }}>{child.icon}</ListItemIcon>
+
+                        <ListItemText
+                          primary={child.text}
+                          sx={{
+                            whiteSpace: 'nowrap',
+                            color: 'inherit',
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              )}
+            </React.Fragment>
+          ))}
+        </StyledList>
+
+        <StyledList sx={{
+          borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+          marginTop: 'auto',
+        }}>
+          <ListItem
+            button
+            onClick={handleLogout}
+            sx={{
+              minHeight: 48,
+              color: 'inherit',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+              my: 1,
+              borderRadius: "8px"
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <Logout />
+            </ListItemIcon>
+            <ListItemText
+              primary="Logout"
+              sx={{
+                opacity: open ? 1 : 0,
+                whiteSpace: 'nowrap',
+                color: 'inherit',
+              }}
+            />
+          </ListItem>
+        </StyledList>
+      </StyledDrawer>
+    </>
   );
-};
-
-export default DataTable;
-
-
+}
 ```
